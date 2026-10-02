@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 #include "../../src/core/selection.h"
+#include "../../src/platform/fs.h"
 #include "../../src/platform/paths.h"
 
 static char *make_repo(void)
@@ -73,9 +74,20 @@ void test_repo(void)
     dk_selection_free(&sel);
     dk_repo_free(&repo);
 
-    /* Variants that differ only by case collide on macOS: reject them. */
+    /* Variants that differ only by case collide on macOS: reject them.
+     * Such a pair can only exist on a case-sensitive file system (Linux);
+     * on macOS "Work" is the same directory as "work", so skip there. */
     test_write(root, "apps/zsh/Work/.zshrc", "x\n");
-    CHECK(dk_repo_load(root, &repo, &err) != 0);
+    char *zsh = dk_path_join(root, "apps/zsh");
+    dk_strlist names = {0};
+    CHECK(dk_list_dir(zsh, &names, &err) == 0);
+    int both = 0;
+    for (size_t i = 0; i < names.len; i++)
+        both += strcmp(names.items[i], "Work") == 0 || strcmp(names.items[i], "work") == 0;
+    if (both == 2)
+        CHECK(dk_repo_load(root, &repo, &err) != 0);
+    strlist_free(&names);
+    free(zsh);
     free(root);
 
     /* A directory without dotkeeper.ini is not a repo. */
