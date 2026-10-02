@@ -7,12 +7,17 @@ app's config (variants) one app at a time or all at once (presets).
 An application manager (installing the apps themselves) is planned; the
 code leaves room for it but does not implement it yet.
 
-Status: early development. The command-line interface works; the
-full-screen interface (`--tui`, built on ncurses) is not built yet.
+Status: early development. Both the command-line interface and the
+full-screen interface (`dotkeeper --tui`, built on ncurses) work.
 
 ## Build
 
-Needs a C compiler and GNU make. Tested on Arch Linux, Debian and macOS.
+Needs a C compiler, GNU make and ncurses. Tested on Arch Linux, Debian
+and macOS.
+
+- Arch: `pacman -S base-devel ncurses`
+- Debian: `apt install build-essential libncurses-dev pkg-config`
+- macOS: the Xcode command line tools (ncurses ships with macOS)
 
 ```sh
 make
@@ -84,6 +89,14 @@ dotkeeper undeploy [app]       Remove Dotkeeper's links
 
 Options: `--repo <path>`, `-n/--dry-run`, `--backup`, `-v/--verbose`.
 
+### Full-screen interface
+
+`dotkeeper --tui` shows your apps on the left and the selected app's
+variants on the right. Up/Down (or j/k) move, Tab switches panes, Enter
+picks a variant, `r` resets an app to its preset's variant, `p` opens the
+preset list, `d` deploys, `q` quits. Every change shows its plan first and
+is only applied after you confirm; with `--dry-run` nothing is applied.
+
 ### Safety rules
 
 - Dotkeeper only removes symlinks it created itself. It keeps a record of
@@ -99,6 +112,7 @@ Options: `--repo <path>`, `-n/--dry-run`, `--backup`, `-v/--verbose`.
 ```
 src/main.c      argument parsing and dispatch
 src/cli/        the commands; turns results into output
+src/tui/        the ncurses interface (the only code that uses ncurses)
 src/core/       repo model, selection, state, planner (no terminal output)
 src/platform/   the only OS-specific code: paths, file system, OS detection
 src/util/       allocation, strings, errors

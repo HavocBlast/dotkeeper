@@ -22,6 +22,8 @@ typedef struct {
 } dk_state;
 
 char *dk_state_path(void);
+/* A new, not yet created, timestamped directory for --backup. */
+char *dk_new_backup_dir(void);
 /* A missing file loads as an empty state. */
 int dk_state_load(const char *path, dk_state *out, dk_err *err);
 int dk_state_save(const char *path, const dk_state *state, dk_err *err);

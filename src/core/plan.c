@@ -238,6 +238,30 @@ int dk_plan_build(const dk_link *want, size_t nwant, const dk_state *state,
     return 0;
 }
 
+int dk_plan_selection(const dk_repo *repo, const dk_state *state, dk_os os,
+                      const char *skip_app, const char *backup_dir, dk_plan *out,
+                      dk_err *err)
+{
+    dk_choice *choices = NULL;
+    size_t nchoices = 0;
+    dk_link *want = NULL;
+    size_t nwant = 0;
+    memset(out, 0, sizeof *out);
+    if (dk_resolve(repo, &state->sel, os, &choices, &nchoices, err) != 0)
+        return -1;
+    for (size_t i = 0; skip_app && i < nchoices; i++)
+        if (strcmp(skip_app, "*") == 0 || strcmp(skip_app, choices[i].app->name) == 0)
+            choices[i].variant = NULL;
+    int rc = dk_wanted_links(choices, nchoices, os, &want, &nwant, err);
+    if (rc == 0) {
+        dk_plan_opts opts = {repo->root, backup_dir};
+        rc = dk_plan_build(want, nwant, state, &opts, out, err);
+    }
+    dk_links_free(want, nwant);
+    free(choices);
+    return rc;
+}
+
 int dk_plan_apply(const dk_plan *plan, dk_state *state, dk_err *err)
 {
     for (size_t i = 0; i < plan->nacts; i++) {

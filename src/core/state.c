@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "ini.h"
 
@@ -15,6 +16,21 @@ char *dk_state_path(void)
     char *path = dk_path_join(dir, "state.ini");
     free(dir);
     return path;
+}
+
+char *dk_new_backup_dir(void)
+{
+    char stamp[32];
+    time_t now = time(NULL);
+    struct tm tm;
+    localtime_r(&now, &tm);
+    strftime(stamp, sizeof stamp, "%Y%m%d-%H%M%S", &tm);
+    char *state = dk_state_dir();
+    char *base = dk_path_join(state, "backups");
+    char *dir = dk_path_join(base, stamp);
+    free(state);
+    free(base);
+    return dir;
 }
 
 typedef struct {

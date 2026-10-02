@@ -18,9 +18,9 @@ jobs:
       - name: Install build tools
         run: |
           if command -v pacman >/dev/null; then
-            pacman -Syu --noconfirm --needed base-devel git
+            pacman -Syu --noconfirm --needed base-devel git ncurses
           else
-            apt-get update && apt-get install -y --no-install-recommends build-essential git ca-certificates
+            apt-get update && apt-get install -y --no-install-recommends build-essential git ca-certificates libncurses-dev pkg-config
           fi
       - uses: actions/checkout@v5
       - name: Build and test
