@@ -20,9 +20,9 @@ jobs:
           if command -v pacman >/dev/null; then
             pacman -Syu --noconfirm --needed base-devel git
           else
-            apt-get update && apt-get install -y --no-install-recommends build-essential git
+            apt-get update && apt-get install -y --no-install-recommends build-essential git ca-certificates
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build and test
         run: make CFLAGS="-O2 -g -Werror" test
       - name: Test with sanitizers
@@ -31,7 +31,7 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build and test
         run: make CFLAGS="-O2 -g -Werror" test
       - name: Test with sanitizers
