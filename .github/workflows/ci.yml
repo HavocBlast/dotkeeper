@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  linux:
+    name: ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["archlinux:latest", "debian:stable"]
+    steps:
+      - name: Install build tools
+        run: |
+          if command -v pacman >/dev/null; then
+            pacman -Syu --noconfirm --needed base-devel git
+          else
+            apt-get update && apt-get install -y --no-install-recommends build-essential git ca-certificates
+          fi
+      - uses: actions/checkout@v5
+      - name: Build and test
+        run: make CFLAGS="-O2 -g -Werror" test
+      - name: Test with sanitizers
+        run: make clean && make SANITIZE=1 test
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build and test
+        run: make CFLAGS="-O2 -g -Werror" test
+      - name: Test with sanitizers
+        run: make clean && make SANITIZE=1 test
