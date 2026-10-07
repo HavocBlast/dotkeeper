@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "../core/config.h"
@@ -108,21 +107,6 @@ void ctx_close(dk_ctx *ctx)
     memset(ctx, 0, sizeof *ctx);
 }
 
-static char *new_backup_dir(void)
-{
-    char stamp[32];
-    time_t now = time(NULL);
-    struct tm tm;
-    localtime_r(&now, &tm);
-    strftime(stamp, sizeof stamp, "%Y%m%d-%H%M%S", &tm);
-    char *state = dk_state_dir();
-    char *base = dk_path_join(state, "backups");
-    char *dir = dk_path_join(base, stamp);
-    free(state);
-    free(base);
-    return dir;
-}
-
 static void print_action(const dk_action *a)
 {
     char *path = dk_tildify(a->path);
@@ -147,33 +131,15 @@ static void print_action(const dk_action *a)
 int sync_links(dk_ctx *ctx, const dk_opts *opts, const char *skip_app)
 {
     dk_err err;
-    dk_choice *choices = NULL;
-    size_t nchoices = 0;
-    dk_link *want = NULL;
-    size_t nwant = 0;
     dk_plan plan = {0};
-    char *backup_dir = NULL;
+    char *backup_dir = opts->backup ? dk_new_backup_dir() : NULL;
     int code = DK_EXIT_ERROR;
 
-    if (dk_resolve(&ctx->repo, &ctx->state.sel, ctx->os, &choices, &nchoices, &err) != 0) {
+    if (dk_plan_selection(&ctx->repo, &ctx->state, ctx->os, skip_app, backup_dir, &plan,
+                          &err) != 0) {
         dk_error("%s", err.msg);
         goto out;
     }
-    for (size_t i = 0; skip_app && i < nchoices; i++)
-        if (strcmp(skip_app, "*") == 0 || strcmp(skip_app, choices[i].app->name) == 0)
-            choices[i].variant = NULL;
-    if (dk_wanted_links(choices, nchoices, ctx->os, &want, &nwant, &err) != 0) {
-        dk_error("%s", err.msg);
-        goto out;
-    }
-    if (opts->backup)
-        backup_dir = new_backup_dir();
-    dk_plan_opts popts = {ctx->repo_path, backup_dir};
-    if (dk_plan_build(want, nwant, &ctx->state, &popts, &plan, &err) != 0) {
-        dk_error("%s", err.msg);
-        goto out;
-    }
-
     if (plan.nconflicts) {
         dk_error("%zu conflict%s, nothing was changed:", plan.nconflicts,
                  plan.nconflicts == 1 ? "" : "s");
@@ -232,8 +198,6 @@ int sync_links(dk_ctx *ctx, const dk_opts *opts, const char *skip_app)
     }
 out:
     dk_plan_free(&plan);
-    dk_links_free(want, nwant);
-    free(choices);
     free(backup_dir);
     return code;
 }

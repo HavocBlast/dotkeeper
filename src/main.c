@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "cli/cli.h"
+#include "tui/tui.h"
 
 static void usage(FILE *out)
 {
@@ -106,9 +107,11 @@ int main(int argc, char **argv)
     opts.args = rest;
 
     int code;
-    if (tui) {
-        dk_error("the TUI is not built yet; use the commands in `dotkeeper --help`");
-        code = DK_EXIT_ERROR;
+    if (tui && cmd) {
+        dk_error("--tui does not take a command");
+        code = DK_EXIT_USAGE;
+    } else if (tui) {
+        code = dk_tui_run(&opts);
     } else if (!cmd) {
         usage(stderr);
         code = DK_EXIT_USAGE;

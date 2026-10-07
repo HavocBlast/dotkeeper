@@ -52,6 +52,14 @@ const char *dk_selection_override(const dk_selection *sel, const char *app)
     return NULL;
 }
 
+void dk_selection_copy(dk_selection *dst, const dk_selection *src)
+{
+    memset(dst, 0, sizeof *dst);
+    dk_selection_set_preset(dst, src->preset);
+    for (size_t i = 0; i < src->noverrides; i++)
+        dk_selection_set_override(dst, src->overrides[i].app, src->overrides[i].variant);
+}
+
 void dk_selection_free(dk_selection *sel)
 {
     dk_selection_clear_overrides(sel);

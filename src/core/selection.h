@@ -22,6 +22,8 @@ void dk_selection_set_override(dk_selection *sel, const char *app, const char *v
 int dk_selection_clear_override(dk_selection *sel, const char *app);
 void dk_selection_clear_overrides(dk_selection *sel);
 const char *dk_selection_override(const dk_selection *sel, const char *app);
+/* Makes dst an independent copy of src (dst must be empty or freed). */
+void dk_selection_copy(dk_selection *dst, const dk_selection *src);
 void dk_selection_free(dk_selection *sel);
 
 typedef enum {

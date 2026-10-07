@@ -28,11 +28,17 @@ CPPFLAGS += -Ivendor/inih $(INIFLAGS)
 # would hide BSD functions, so ask for everything there instead.
 ifeq ($(shell uname -s),Darwin)
 CPPFLAGS += -D_DARWIN_C_SOURCE
+# macOS ships ncurses as plain libncurses; there is no ncursesw.
+CURSES_LIBS ?= -lncurses
 else
 CPPFLAGS += -D_XOPEN_SOURCE=700
+# Arch and Debian name the wide-character build ncursesw; ask pkg-config
+# first in case a distro needs extra flags such as -ltinfo.
+CURSES_LIBS ?= $(shell pkg-config --libs ncursesw 2>/dev/null || echo -lncursesw)
 endif
+LDLIBS += $(CURSES_LIBS)
 
-SRC = $(wildcard src/util/*.c src/platform/*.c src/core/*.c src/cli/*.c)
+SRC = $(wildcard src/util/*.c src/platform/*.c src/core/*.c src/cli/*.c src/tui/*.c)
 LIB_OBJ = $(SRC:%.c=build/%.o) build/vendor/inih/ini.o
 MAIN_OBJ = build/src/main.o
 TEST_SRC = $(wildcard tests/unit/*.c)

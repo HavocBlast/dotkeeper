@@ -52,6 +52,13 @@ void dk_links_free(dk_link *links, size_t n);
 
 int dk_plan_build(const dk_link *want, size_t nwant, const dk_state *state,
                   const dk_plan_opts *opts, dk_plan *out, dk_err *err);
+/* The whole pipeline every front end needs: resolve state->sel, collect
+ * the wanted links and build the plan. `skip_app` leaves one app (or every
+ * app, for "*") undeployed; NULL deploys all. `backup_dir` as in
+ * dk_plan_opts. */
+int dk_plan_selection(const dk_repo *repo, const dk_state *state, dk_os os,
+                      const char *skip_app, const char *backup_dir, dk_plan *out,
+                      dk_err *err);
 /* Applies actions in order and updates the record as each succeeds, so
  * the state stays accurate even if an action fails part way. */
 int dk_plan_apply(const dk_plan *plan, dk_state *state, dk_err *err);
